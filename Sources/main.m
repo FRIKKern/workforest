@@ -530,11 +530,11 @@ static NSString *ShortState(WFTree *t) {
     if (t.prunable) return @"folder missing";
     if (t.dirty > 0) return Plural(t.dirty, @"change");
     if (t.untracked > 0) return [NSString stringWithFormat:@"%ld untracked", (long)t.untracked];
-    if (t.unpushed > 0 && !t.merged) return [NSString stringWithFormat:@"%ld only here", (long)t.unpushed];
-    if (t.merged) return [t.merged isEqualToString:@"ancestor"] ? @"merged" : [NSString stringWithFormat:@"merged (%@)", t.merged];
-    if ([t.upstream isEqualToString:@"gone"]) return @"upstream gone";
+    if (t.unpushed > 0 && !t.merged) return [NSString stringWithFormat:@"%@ only here", Plural(t.unpushed, @"commit")];
+    if (t.merged) return [t.merged isEqualToString:@"ancestor"] ? @"merged" : [t.merged stringByAppendingString:@"-merged"];
+    if ([t.upstream isEqualToString:@"gone"]) return @"remote branch deleted";
     if (t.locked) return @"locked";
-    if (t.notInDefault > 0) return [NSString stringWithFormat:@"%ld not in %@", (long)t.notInDefault, [t.defaultBranch.lastPathComponent ?: @"main" lastPathComponent]];
+    if (t.notInDefault > 0) return [NSString stringWithFormat:@"%@ not in %@", Plural(t.notInDefault, @"commit"), [t.defaultBranch.lastPathComponent ?: @"main" lastPathComponent]];
     return @"clean";
 }
 
@@ -542,11 +542,11 @@ static NSString *ShortState(WFTree *t) {
 static NSView *MenuHeader(uint64_t reclaim, NSString *line) {
     CGFloat w = 340;
     NSView *v = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, w, 62)];
-    NSTextField *n = [NSTextField labelWithString:WFFormatBytes(reclaim)];
-    n.font = [NSFont monospacedDigitSystemFontOfSize:22 weight:NSFontWeightSemibold]; n.frame = NSMakeRect(14, 24, 200, 28); [v addSubview:n];
-    NSTextField *c = [NSTextField labelWithString:reclaim ? @"reclaimable" : @"nothing to reclaim"];
-    c.font = [NSFont systemFontOfSize:12 weight:NSFontWeightMedium]; c.textColor = NSColor.secondaryLabelColor;
-    c.alignment = NSTextAlignmentRight; c.frame = NSMakeRect(w - 164, 30, 150, 16); [v addSubview:c];
+    NSMutableAttributedString *big = [[NSMutableAttributedString alloc] initWithString:reclaim ? WFFormatBytes(reclaim) : @"Nothing"
+        attributes:@{NSFontAttributeName: [NSFont monospacedDigitSystemFontOfSize:22 weight:NSFontWeightSemibold], NSForegroundColorAttributeName: NSColor.labelColor}];
+    [big appendAttributedString:[[NSAttributedString alloc] initWithString:reclaim ? @"  to reclaim" : @"  to reclaim"
+        attributes:@{NSFontAttributeName: [NSFont systemFontOfSize:13], NSForegroundColorAttributeName: NSColor.secondaryLabelColor}]];
+    NSTextField *n = [NSTextField labelWithAttributedString:big]; n.frame = NSMakeRect(14, 24, w - 28, 28); [v addSubview:n];
     NSTextField *l = [NSTextField labelWithString:line];
     l.font = [NSFont systemFontOfSize:12]; l.textColor = NSColor.secondaryLabelColor; l.lineBreakMode = NSLineBreakByTruncatingTail;
     l.frame = NSMakeRect(14, 8, w - 28, 15); [v addSubview:l];
@@ -563,6 +563,29 @@ static NSView *MenuHeader(uint64_t reclaim, NSString *line) {
     return name;
 }
 
+/// "quiet 6d: squash-merged…" reads "squash-merged…": the card's Last work line already says how quiet it is.
+static NSString *WithoutQuietLead(NSString *why) {
+    NSRange colon = [why rangeOfString:@": "];
+    return [why hasPrefix:@"quiet "] && colon.location != NSNotFound && colon.location < 16 ? [why substringFromIndex:NSMaxRange(colon)] : why;
+}
+
+/// Whole sentences of text that fit in `lines` lines at this width, so a summary never stops mid-word.
+static NSString *FitSentences(NSString *text, NSFont *font, CGFloat width, NSInteger lines) {
+    NSMutableArray *parts = [NSMutableArray new];
+    [text enumerateSubstringsInRange:NSMakeRange(0, text.length) options:NSStringEnumerationBySentences usingBlock:^(NSString *sub, NSRange r, NSRange er, BOOL *stop) {
+        [parts addObject:[text substringWithRange:er]];
+    }];
+    CGFloat limit = lines * (font.ascender - font.descender + font.leading) + 1;
+    NSMutableString *out = [NSMutableString new];
+    for (NSString *p in parts) {
+        NSString *next = [[out stringByAppendingString:p] stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+        CGFloat h = [next boundingRectWithSize:NSMakeSize(width, 4000) options:NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName: font}].size.height;
+        if (h > limit && out.length) break;
+        [out setString:[out stringByAppendingString:p]];
+    }
+    return [out stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+}
+
 /// Will this worktree go, and when. Plan entries that wait for the first day still count.
 - (BOOL)removesNext:(WFTree *)t {
     NSDictionary *p = self.plan[t.path];
@@ -575,7 +598,7 @@ static NSView *MenuHeader(uint64_t reclaim, NSString *line) {
     if (t.prunable) return @[@"Folder is gone.", NSColor.secondaryLabelColor, @"Git still lists this worktree. Prune, under More, tidies git's record of it."];
     NSDictionary *p = self.plan[t.path];
     NSString *why = p[@"why"] ?: WFMustKeep(t, self.review) ?: @"";
-    if ([p[@"remove"] boolValue]) return @[@"Removes at the next review.", NSColor.systemOrangeColor, Sentence(Cut(why, 220))];
+    if ([p[@"remove"] boolValue]) return @[@"Removes at the next review.", NSColor.systemOrangeColor, Sentence(Cut(WithoutQuietLead(why), 220))];
     if ([why hasPrefix:@"would remove ("]) {
         NSRange end = [why rangeOfString:@"), but " options:NSBackwardsSearch];
         NSString *inner = end.location != NSNotFound ? [why substringWithRange:NSMakeRange(14, end.location - 14)] : why;
@@ -634,23 +657,28 @@ static NSView *MenuHeader(uint64_t reclaim, NSString *line) {
         x.toolTip = value;
         [rows addObject:@[l, x]];
     };
-    fact(@"Repo", [NSString stringWithFormat:@"%@ · %@", t.repoName, t.branch ?: @"detached"]);
+    fact(@"Branch", [NSString stringWithFormat:@"%@ in %@", t.branch ?: @"detached commit", t.repoName]);
     if (t.lastWork) fact(@"Last work", [NSString stringWithFormat:@"%@ ago%@", WFDuration(t.quiet),
                                         t.lastSubject.length ? [NSString stringWithFormat:@" · “%@”", t.lastSubject] : @""]);
-    fact(@"Disk", t.sizedAt ? [NSString stringWithFormat:@"%@ · %@ in caches", WFFormatBytes(t.diskBytes), WFFormatBytes(t.cacheBytes)] : @"still measuring");
+    fact(@"Disk", t.sizedAt ? (t.cacheBytes ? [NSString stringWithFormat:@"%@, of which %@ is caches", WFFormatBytes(t.diskBytes), WFFormatBytes(t.cacheBytes)] : WFFormatBytes(t.diskBytes)) : @"still measuring");
     fact(@"Git", WFStateWords(t));
-    fact(@"Agent", t.session ? WFSessionWords(t.session) : @"no agent session found");
+    NSDictionary *se = t.session;
+    NSString *seTitle = se[@"title"] ?: se[@"first_prompt"];
+    fact(@"Agent", se ? [NSString stringWithFormat:@"%@%@, %@ ago", se[@"agent"], seTitle ? [NSString stringWithFormat:@", “%@”", seTitle] : @"",
+                         Short([se[@"last_active_minutes_ago"] doubleValue] * 60)] : @"none found");
     NSMutableArray *inside = [NSMutableArray new];
     for (NSDictionary *h in t.servers) [inside addObject:[NSString stringWithFormat:@":%@ %@", h[@"port"], h[@"framework"]]];
     for (NSString *p in t.processes) [inside addObject:[p componentsSeparatedByString:@" (pid"].firstObject];
-    fact(@"Inside", inside.count ? [[NSOrderedSet orderedSetWithArray:inside].array componentsJoinedByString:@", "] : @"nothing running");
+    if (inside.count) fact(@"Running", [[NSOrderedSet orderedSetWithArray:inside].array componentsJoinedByString:@", "]);
     NSGridView *g = [NSGridView gridViewWithViews:rows];
     g.rowSpacing = 4; g.columnSpacing = 10; [g columnAtIndex:0].xPlacement = NSGridCellPlacementTrailing;
     [g columnAtIndex:0].width = 62; [g columnAtIndex:1].xPlacement = NSGridCellPlacementLeading;   // the same columns on every card
     [s addArrangedSubview:g];
-    if (v.reason.length)
+    NSString *said = [st[2] lowercaseString], *reason = [WithoutQuietLead(v.reason ?: @"") lowercaseString];
+    BOOL repeats = reason.length > 12 && [said containsString:[reason substringToIndex:MIN(reason.length, 40)]];
+    if (v.reason.length && !repeats)
         [s addArrangedSubview:Para([NSString stringWithFormat:@"%@ says %@%@: %@", WFModelLabel(self.review.model), v.verdict, v.judged ? @" after the judge" : @"", v.reason],
-                                   [NSFont systemFontOfSize:11.5], NSColor.secondaryLabelColor, inner, 3)];
+                                   [NSFont systemFontOfSize:11.5], NSColor.secondaryLabelColor, inner, 2)];
     NSSize fit = s.fittingSize;
     s.frame = NSMakeRect(0, 0, MAX(fit.width, inner + 32), fit.height);
     NSMenuItem *i = [NSMenuItem new]; i.view = s;
@@ -659,19 +687,18 @@ static NSView *MenuHeader(uint64_t reclaim, NSString *line) {
 
 - (NSMenuItem *)treeItem:(WFTree *)t showRepo:(BOOL)showRepo {
     NSString *name = [self nameFor:t];
-    NSString *branch = t.branch && ![t.branch isEqualToString:t.name] && ![t.branch hasSuffix:name] ? t.branch : nil;
     NSMenuItem *i = [[NSMenuItem alloc] initWithTitle:name action:nil keyEquivalent:@""];
-    NSString *sub = [NSString stringWithFormat:@"%@%@ · quiet %@ · %@", showRepo ? [t.repoName stringByAppendingString:@" · "] : @"",
-                     t.sizedAt ? WFFormatBytes(t.diskBytes) : @"sizing", Short(t.quiet), ShortState(t)];
+    // At most three facts: the repo when there are several, the size, and the one state the section does not already say.
+    NSString *section = WFCategory(t, self.review), *state = ShortState(t);
+    BOOL said = ([section isEqualToString:@"merged"] && (t.merged || [state isEqualToString:@"remote branch deleted"])) || [state isEqualToString:@"clean"];
+    NSMutableArray *facts = [NSMutableArray new];
+    if (showRepo) [facts addObject:t.repoName];
+    [facts addObject:t.sizedAt ? WFFormatBytes(t.diskBytes) : @"sizing"];
+    [facts addObject:said ? [NSString stringWithFormat:@"quiet %@", Short(t.quiet)] : state];
+    NSString *sub = [facts componentsJoinedByString:@" · "];
     BOOL modern = NO;
-    if (@available(macOS 14.4, *)) {
-        modern = YES;
-        i.title = branch ? [NSString stringWithFormat:@"%@   %@", Cut(name, 34), Cut(branch, 30)] : Cut(name, 48);
-        i.subtitle = sub;
-        if ([self removesNext:t]) i.badge = [[NSMenuItemBadge alloc] initWithString:@"removes next"];
-        else if (t.merged && ![WFCategory(t, self.review) isEqualToString:@"merged"]) i.badge = [[NSMenuItemBadge alloc] initWithString:@"merged"];
-    }
-    if (!modern) i.attributedTitle = Titled(branch ? [NSString stringWithFormat:@"%@   %@", Cut(name, 34), Cut(branch, 30)] : Cut(name, 48), sub);
+    if (@available(macOS 14.4, *)) { modern = YES; i.title = Cut(name, 48); i.subtitle = sub; }
+    if (!modern) i.attributedTitle = Titled(Cut(name, 48), sub);
 
     NSMenu *m = [NSMenu new];
     [m addItem:[self cardFor:t]];
@@ -740,8 +767,9 @@ static NSDictionary<NSString *, NSString *> *Prefixes(NSArray<WFTree *> *trees) 
 
     NSMenu *menu = [NSMenu new];
     NSString *line = !self.scanner.scannedAt ? @"Looking for worktrees…"
-        : [NSString stringWithFormat:@"%@ · %@ · %ld removable · %@", Plural(linked.count, @"worktree"), Plural(repos, @"repo"), (long)removable,
-           WFCurrentMode() != WFModeIdle && !WFGraceOver() ? [NSString stringWithFormat:@"%@ acts in %@", WFModeLabel(WFCurrentMode()), Short(WFGraceLeft())] : WFModeLabel(WFCurrentMode())];
+        : [NSString stringWithFormat:@"%@ in %@ · %@", Plural(linked.count, @"worktree"), Plural(repos, @"repo"),
+           WFCurrentMode() != WFModeIdle && !WFGraceOver() ? [NSString stringWithFormat:@"%@ starts in %@", WFModeLabel(WFCurrentMode()), Short(WFGraceLeft())] : WFModeLabel(WFCurrentMode())];
+    (void)removable;
     NSMenuItem *head = [NSMenuItem new];
     head.view = MenuHeader(reclaim, line);
     [menu addItem:head];
@@ -756,11 +784,11 @@ static NSDictionary<NSString *, NSString *> *Prefixes(NSArray<WFTree *> *trees) 
         note = totals.location != NSNotFound && NSMaxRange(totals) < r.summary.length ? [r.summary substringFromIndex:NSMaxRange(totals)] : r.summary;
     }
     else if (!r && linked.count) note = @"No review yet. Review Now asks Haiku or Luna which worktrees are still wanted.";
-    if (note) { [menu addItem:TextItem(note, 4)]; [menu addItem:NSMenuItem.separatorItem]; }
+    if (note) { [menu addItem:TextItem(FitSentences(note, [NSFont systemFontOfSize:12.5], 312, 3), 3)]; [menu addItem:NSMenuItem.separatorItem]; }
 
     if (clean.count) {
         NSMenuItem *go = Item(menu, @"Clean Up", self.removing ? NULL : @selector(cleanUp), self, NO);
-        go.attributedTitle = Titled(@"Clean Up", [NSString stringWithFormat:@"%@ · %@", Plural(clean.count, @"worktree"), WFFormatBytes(cleanDisk)]);
+        go.attributedTitle = Titled(@"Clean Up", [NSString stringWithFormat:@"%@, %@", Plural(clean.count, @"worktree"), WFFormatBytes(cleanDisk)]);
         go.toolTip = @"Removes what the last review calls stale, when nothing keeps it: no changes, no commits only here, nothing running, no agent or file change in the last day.";
     }
     NSMenuItem *rv = Item(menu, self.reviewing ? @"Reviewing…" : @"Review Now", self.reviewing ? NULL : @selector(reviewNow), self, NO);
@@ -775,14 +803,14 @@ static NSDictionary<NSString *, NSString *> *Prefixes(NSArray<WFTree *> *trees) 
         [(groups[c] ?: (groups[c] = [NSMutableArray new])) addObject:t];
     }
     if (self.scanner.scannedAt && !linked.count) Header(menu, @"No linked worktrees");
-    for (NSArray *sec in @[@[@"merged", @"Merged or upstream gone"], @[@"stale", @"Stale"], @[@"active", @"Holding work or in use"], @[@"quiet", @"Quiet"]]) {
+    for (NSArray *sec in @[@[@"merged", @"Merged"], @[@"stale", @"Stale"], @[@"active", @"In use"], @[@"quiet", @"Quiet"]]) {
         NSArray *g = [groups[sec[0]] sortedArrayUsingComparator:^NSComparisonResult(WFTree *a, WFTree *b) {
             return a.diskBytes > b.diskBytes ? NSOrderedAscending : a.diskBytes < b.diskBytes ? NSOrderedDescending : NSOrderedSame; }];
         if (!g.count) continue;
-        Section(menu, [NSString stringWithFormat:@"%@ · %lu", sec[1], (unsigned long)g.count]);
+        Section(menu, sec[1]);
         NSMenu *rest = [NSMenu new];
         NSUInteger n = 0;
-        for (WFTree *t in g) [(n++ < 8 ? menu : rest) addItem:[self treeItem:t showRepo:showRepo]];
+        for (WFTree *t in g) [(n++ < 6 ? menu : rest) addItem:[self treeItem:t showRepo:showRepo]];
         if (rest.numberOfItems) Sub(menu, [NSString stringWithFormat:@"%ld More", (long)rest.numberOfItems], rest);
     }
     [menu addItem:NSMenuItem.separatorItem];
@@ -791,12 +819,6 @@ static NSDictionary<NSString *, NSString *> *Prefixes(NSArray<WFTree *> *trees) 
         NSMenu *gm = [NSMenu new];
         for (WFTree *t in gone) [gm addItem:[self treeItem:t showRepo:showRepo]];
         Sub(menu, @"Missing Folders", gm);
-    }
-    NSArray *mains = [all filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"isMain == YES"]];
-    if (mains.count) {
-        NSMenu *mm = [NSMenu new];
-        for (WFTree *t in mains) [mm addItem:[self treeItem:t showRepo:NO]];
-        Sub(menu, @"Main Checkouts", mm);
     }
     NSArray *rem = WFRemoved();
     if (rem.count) {
@@ -851,6 +873,12 @@ static NSDictionary<NSString *, NSString *> *Prefixes(NSArray<WFTree *> *trees) 
     Item(set, @"Launch at Login", @selector(toggleLogin), self, SMAppService.mainAppService.status == SMAppServiceStatusEnabled);
     Item(set, @"Edit Rules…", @selector(editRules), self, NO);
     Item(set, @"Rescan Now", @selector(rescan), self, NO);
+    NSArray *mains = [all filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"isMain == YES"]];
+    if (mains.count) {
+        NSMenu *mm = [NSMenu new];
+        for (WFTree *t in mains) [mm addItem:[self treeItem:t showRepo:NO]];
+        Sub(set, @"Main Checkouts", mm);
+    }
     [set addItem:NSMenuItem.separatorItem];
     Header(set, [NSString stringWithFormat:@"WorkForest %@ · scanned %@", NSBundle.mainBundle.infoDictionary[@"CFBundleShortVersionString"] ?: @"",
                  self.scanner.scannedAt ? [NSString stringWithFormat:@"%@ ago", Short(-self.scanner.scannedAt.timeIntervalSinceNow)] : @"now"]);

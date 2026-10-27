@@ -2,6 +2,18 @@
 
 All notable changes to WorkForest. Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased]
+
+### Changed
+- A quieter menu, held to the new standard in docs/DESIGN.md:
+  - the header reads "5.3 GB to reclaim", with one line of counts under it
+  - the summary ends on a whole sentence
+  - sections carry no counts, and there are no badges
+  - rows show at most three facts
+  - cards leave out empty facts and skip the model's note when it repeats the status
+  - Main Checkouts moved into Settings
+- Plain words: "squash-merged", "remote branch deleted", "1 commit not in main".
+
 ## [0.1.0] - 2026-10-27
 
 ### Added

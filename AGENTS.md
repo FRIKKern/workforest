@@ -20,7 +20,7 @@ Never run `workforest auto` without `--dry-run`, `clean-up`, `remove` or `prune`
 - `Sources/main.m`: the CLI (`RunCLI`), the review triggers (`watchEvents`) and the menu bar UI.
 - `tools/`: `mkicon.m` renders the icon. The fakes for tests are `fakeclaude.py`, `fakecodex.py` and `fakeanswer.py`. `tools/render.m` renders the menu and hover cards offscreen to PNG, as [docs/RENDER.md](docs/RENDER.md) describes.
 
-**The menu** is a native NSMenu, kept that way on purpose. Text meant to be read is a custom view in secondaryLabelColor (`TextItem`, `Para`), never a disabled item, which macOS greys out. Rows use title, subtitle and badge from macOS 14.4, with a one-line fallback. Each row's submenu starts with one card (`cardFor:`), whose status (`statusFor:`) says in plain words why the worktree stays or when it goes. Use tail truncation only. No decorative SF Symbols on items. After a change to the menu, render it with `tools/render.m` and look at the PNGs.
+**The menu** follows [docs/DESIGN.md](docs/DESIGN.md), the standard shared with LocoHost. It is a native NSMenu, kept that way on purpose. Text meant to be read is a custom view in secondaryLabelColor (`TextItem`, `Para`), never a disabled item, which macOS greys out. Rows use title, subtitle and badge from macOS 14.4, with a one-line fallback. Each row's submenu starts with one card (`cardFor:`), whose status (`statusFor:`) says in plain words why the worktree stays or when it goes. Use tail truncation only. No decorative SF Symbols on items. After a change to the menu, render it with `tools/render.m` and look at the PNGs.
 
 **Invariants that must hold after any change**
 

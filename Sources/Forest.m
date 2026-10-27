@@ -62,16 +62,16 @@ static NSString *Plural(NSInteger n, NSString *word) { return [NSString stringWi
 NSString *WFStateWords(WFTree *t) {
     if (t.prunable) return @"folder missing";
     NSMutableArray *p = [NSMutableArray new];
-    if (t.merged) [p addObject:[t.merged isEqualToString:@"ancestor"] ? @"merged" : [NSString stringWithFormat:@"merged (%@)", t.merged]];
-    if ([t.upstream isEqualToString:@"gone"]) [p addObject:@"upstream gone"];
+    if (t.merged) [p addObject:[t.merged isEqualToString:@"ancestor"] ? @"merged" : [t.merged stringByAppendingString:@"-merged"]];
+    if ([t.upstream isEqualToString:@"gone"]) [p addObject:@"remote branch deleted"];
     else if ([t.upstream isEqualToString:@"none"] && !t.isMain) [p addObject:@"never pushed"];
     if (t.dirty > 0) [p addObject:Plural(t.dirty, @"change")];
     if (t.dirty < 0) [p addObject:@"status unknown"];
     if (t.untracked > 0) [p addObject:Plural(t.untracked, @"untracked file")];
-    if (t.unpushed > 0 && !t.merged) [p addObject:[NSString stringWithFormat:@"%ld only here", (long)t.unpushed]];
+    if (t.unpushed > 0 && !t.merged) [p addObject:[NSString stringWithFormat:@"%@ only here", Plural(t.unpushed, @"commit")]];
     if (t.detached) [p addObject:t.orphanCommits > 0 ? [NSString stringWithFormat:@"detached, %ld commits no branch holds", (long)t.orphanCommits] : @"detached"];
     if (t.locked) [p addObject:@"locked"];
-    if (!t.merged && t.notInDefault > 0) [p addObject:[NSString stringWithFormat:@"%ld not in %@", (long)t.notInDefault, t.defaultBranch ?: @"default"]];
+    if (!t.merged && t.notInDefault > 0) [p addObject:[NSString stringWithFormat:@"%@ not in %@", Plural(t.notInDefault, @"commit"), t.defaultBranch ?: @"the default branch"]];
     return p.count ? [p componentsJoinedByString:@" · "] : @"clean";
 }
 

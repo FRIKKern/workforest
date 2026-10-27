@@ -71,11 +71,11 @@ No mode acts until WorkForest has watched for a day. The day starts at the app's
 
 ## The menu
 
-The top of the menu says how much disk the worktrees that would go next hold, and one line of counts with the mode. The review's summary follows in plain sentences. *Clean Up* appears only when the last review calls something stale that nothing keeps. *Review Now* says how long ago the last review ran, and its tooltip names the model, the tokens and what woke it.
+The menu follows the standard in [DESIGN.md](DESIGN.md). The top says how much disk the worktrees that would go next hold, as "5.3 GB to reclaim", with one line of counts and the mode under it. The review's summary follows in up to three lines, cut at a whole sentence. *Clean Up* appears only when the last review calls something stale that nothing keeps. *Review Now* says how long ago the last review ran, and its tooltip names the model, the tokens and what woke it.
 
-Worktrees are listed under section headers: merged or upstream gone, stale, holding work or in use, and quiet, with the largest first and eight per section before a *More* submenu. A row shows the folder name without the start its repo's worktrees share, the branch when it says something more, and a line with the repo, disk, quiet time and state. A *removes next* badge marks what the mode removes at the next review.
+Worktrees are listed under four section headers, Merged, Stale, In use and Quiet, with the largest first and six per section before a *More* submenu. A row shows the folder name without the start its repo's worktrees share, and under it at most three facts: the repo when there are several, the disk, and the one state the section does not already say, such as "3 changes" or "quiet 6d". Main checkouts are listed under Settings.
 
-Each row opens a card: what the worktree is, then in color whether it stays and why, or that it goes at the next review. Then come the facts behind that, the model's note, and Open in Finder, Open in Terminal, Keep for a Week, Remove and More. Remove is greyed out while a keep rule holds, and its tooltip says which one.
+Each row opens a card: what the worktree is, then in color whether it stays and why, or that it goes at the next review. Then come up to five facts behind that, leaving out the empty ones, the model's note when it adds to the status, and Open in Finder, Open in Terminal, Keep for a Week, Remove and More. Remove is greyed out while a keep rule holds, and its tooltip says which one.
 
 ## Removing
 
