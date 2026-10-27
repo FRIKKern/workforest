@@ -1,0 +1,43 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='960' height='300' viewBox='0 0 960 300' role='img' aria-labelledby='t d'>
+<title id='t'>How a worktree is removed, and brought back</title><desc id='d'>Removal has four steps. One: WorkForest reads the worktree again, walks its files and checks every keep rule on what is true now. Two: it copies ignored files that are not caches, such as .env, into its support folder. Three: it runs git worktree remove without --force, so git itself refuses a worktree with changes. Four: it deletes the branch with git branch -d only when it is merged, so git refuses unmerged work. The record of the path, branch and commit lets workforest restore recreate the worktree and put the saved files back.</desc>
+<defs><marker id='a' viewBox='0 0 10 10' refX='8' refY='5' markerWidth='7' markerHeight='7' orient='auto'><path d='M0 0L10 5L0 10z' fill='#7CC77E'/></marker>
+<style>text{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;fill:#E6F0E8}.t{font-size:18px;font-weight:700}.s{font-size:13.5px;fill:#B9CCBF}.c{font-family:'SF Mono',Menlo,Consolas,monospace;font-size:12px;fill:#E9C46A}.n{font-size:15px;font-weight:700;fill:#0B1A12}</style></defs>
+<rect width='960' height='300' rx='18' fill='#0B1A12'/>
+<text x='48' y='58' style='font-size:26px;font-weight:700' fill='#7CC77E'>Removed with git's own checks, and brought back</text>
+<text x='48' y='86' class='s' style='font-size:16px'>WorkForest never forces git. A refusal leaves the worktree as it was.</text>
+<g>
+<rect x='48' y='112' width='200' height='150' rx='14' fill='#13281C' stroke='#24442F'/>
+<circle cx='78' cy='142' r='16' fill='#7CC77E'/><text x='78' y='148' text-anchor='middle' class='n'>1</text>
+<text x='68' y='186' class='t'>Check again</text>
+<text x='68' y='210' class='s'>Fresh git status, a</text>
+<text x='68' y='230' class='s'>new walk, processes</text>
+<text x='68' y='250' class='s'>and sessions.</text>
+</g>
+<path d='M251 187h14' stroke='#7CC77E' stroke-width='2' marker-end='url(#a)'/>
+<g>
+<rect x='270' y='112' width='200' height='150' rx='14' fill='#13281C' stroke='#24442F'/>
+<circle cx='300' cy='142' r='16' fill='#7CC77E'/><text x='300' y='148' text-anchor='middle' class='n'>2</text>
+<text x='290' y='186' class='t'>Save .env</text>
+<text x='290' y='210' class='s'>Ignored files that are</text>
+<text x='290' y='230' class='s'>not caches, copied to</text>
+<text x='290' y='250' class='s'>the support folder.</text>
+</g>
+<path d='M473 187h14' stroke='#7CC77E' stroke-width='2' marker-end='url(#a)'/>
+<g>
+<rect x='492' y='112' width='200' height='150' rx='14' fill='#13281C' stroke='#24442F'/>
+<circle cx='522' cy='142' r='16' fill='#7CC77E'/><text x='522' y='148' text-anchor='middle' class='n'>3</text>
+<text x='512' y='186' class='t'>Remove</text>
+<text x='512' y='210' class='c'>git worktree remove</text>
+<text x='512' y='230' class='s'>No --force: git refuses</text>
+<text x='512' y='250' class='s'>a worktree with changes.</text>
+</g>
+<path d='M695 187h14' stroke='#7CC77E' stroke-width='2' marker-end='url(#a)'/>
+<g>
+<rect x='714' y='112' width='198' height='150' rx='14' fill='#1D3A28' stroke='#E9C46A'/>
+<circle cx='744' cy='142' r='16' fill='#E9C46A'/><text x='744' y='148' text-anchor='middle' class='n'>4</text>
+<text x='734' y='186' class='t'>Branch</text>
+<text x='734' y='210' class='c'>git branch -d</text>
+<text x='734' y='230' class='s'>Only when merged.</text>
+<text x='734' y='250' class='c'>workforest restore</text>
+</g>
+</svg>

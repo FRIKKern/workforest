@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDisplayName</key>
+	<string>WorkForest</string>
+	<key>CFBundleExecutable</key>
+	<string>WorkForest</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+	<key>CFBundleIdentifier</key>
+	<string>no.guerrilla.workforest</string>
+	<key>CFBundleName</key>
+	<string>WorkForest</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.1.0</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>no.guerrilla.workforest</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>workforest</string>
+			</array>
+		</dict>
+	</array>
+	<key>CFBundleVersion</key>
+	<string>100</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>13.0</string>
+	<key>LSUIElement</key>
+	<true/>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>WorkForest scans this folder for git repos and their worktrees, to show what each one holds and whether it is merged.</string>
+	<key>NSDesktopFolderUsageDescription</key>
+	<string>WorkForest scans this folder for git repos and their worktrees, to show what each one holds and whether it is merged.</string>
+	<key>NSDownloadsFolderUsageDescription</key>
+	<string>WorkForest scans this folder for git repos and their worktrees, to show what each one holds and whether it is merged.</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>Frikk Jarl</string>
+</dict>
+</plist>

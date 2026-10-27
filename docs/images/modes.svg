@@ -1,0 +1,28 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='960' height='400' viewBox='0 0 960 400' role='img' aria-labelledby='t d'>
+<title id='t'>What every mode keeps, and what each mode removes</title><desc id='d'>Every mode keeps a worktree that has uncommitted or untracked files, commits on no remote and not in the default branch, detached commits no branch holds, a process or localhost running inside, an agent session or a file change in the last day, is locked or protected, or is the main checkout. Then the modes differ. Idle removes nothing and reports. Proactive removes a worktree that is merged or whose remote branch is gone and that has been quiet for a week. Eager removes a worktree the review is sure is stale, and sends every other quiet one to a judge that keeps it only with evidence.</desc>
+<defs><marker id='a' viewBox='0 0 10 10' refX='8' refY='5' markerWidth='7' markerHeight='7' orient='auto'><path d='M0 0L10 5L0 10z' fill='#7CC77E'/></marker>
+<style>text{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;fill:#E6F0E8}.t{font-size:19px;font-weight:700}.s{font-size:14px;fill:#B9CCBF}</style></defs>
+<rect width='960' height='400' rx='18' fill='#0B1A12'/>
+<text x='48' y='58' style='font-size:26px;font-weight:700' fill='#7CC77E'>Work stays. Then the mode decides.</text>
+<text x='48' y='86' class='s' style='font-size:16px'>Nothing below the first box is ever removed, whatever the model says.</text>
+
+<rect x='48' y='112' width='864' height='106' rx='14' fill='#13281C' stroke='#7CC77E'/>
+<text x='70' y='146' class='t'>Every mode keeps</text>
+<text x='70' y='174' class='s'>uncommitted or untracked files · commits on no remote and not merged · detached commits no branch holds</text>
+<text x='70' y='198' class='s'>a process or localhost inside · an agent session or a file change in the last day · locked · protected · main checkout</text>
+
+<path d='M480 222v18' stroke='#7CC77E' stroke-width='2' marker-end='url(#a)'/>
+<rect x='48' y='250' width='272' height='118' rx='14' fill='#13281C' stroke='#24442F'/>
+<text x='70' y='284' class='t'>Idle</text>
+<text x='70' y='312' class='s'>Reviews and reports.</text>
+<text x='70' y='334' class='s'>Removes nothing by itself.</text>
+<rect x='344' y='250' width='272' height='118' rx='14' fill='#13281C' stroke='#24442F'/>
+<text x='366' y='284' class='t'>Proactive</text>
+<text x='366' y='312' class='s'>Merged, or the remote branch is</text>
+<text x='366' y='334' class='s'>gone, and quiet for a week.</text>
+<rect x='640' y='250' width='272' height='118' rx='14' fill='#1D3A28' stroke='#E9C46A'/>
+<text x='662' y='284' class='t' style='fill:#E9C46A'>Eager, the default</text>
+<text x='662' y='312' class='s'>Sure it is stale, or a judge finds</text>
+<text x='662' y='334' class='s'>no evidence that anyone wants it.</text>
+<text x='662' y='356' class='s' style='font-size:12.5px'>Not before a day of watching.</text>
+</svg>
